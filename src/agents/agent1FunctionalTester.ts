@@ -55,6 +55,9 @@ Generate FEWER scenarios when:
 
 Return ONLY a valid JSON array. No explanation. No markdown. No extra text.
 
+- Keep each scenario concise — steps should be 1 sentence each, expected should be 1 sentence
+- Do not over-explain — brevity is important for JSON size
+
 JSON schema:
 [
   {
@@ -100,7 +103,7 @@ export async function runFunctionalTester(featureDescription: string): Promise<S
 
   // If called from pipeline, featureDescription already has full context.
   // If run standalone, try loading from input/ folder, fall back to the argument.
-  const inputContext = loadInputContext();
+  const inputContext = process.argv[2] ? '' : loadInputContext();
   const finalInput = inputContext || featureDescription;
 
   console.log(`Input: ${finalInput.length > 80
