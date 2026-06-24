@@ -19,22 +19,28 @@ const server = new McpServer({
 server.registerTool(
   'run_qa_pipeline',
   {
-    description: 'Run the full 4-agent QA pipeline — generates test scenarios, assigns layers, writes POM Playwright tests, and reviews them. Returns a summary report.',
+    description: 'Run the full 4-agent QA pipeline. Automatically reads from input/feature.md by default. Generates test scenarios, assigns test pyramid layers, writes POM Playwright tests, and produces a code review report.',
     inputSchema: {
-      feature_description: z.string().describe('The feature to generate tests for. Can be a short description or full requirements.'),
-      use_input_folder: z.boolean().optional().describe('If true, reads from input/feature.md instead of the feature_description parameter. Default false.'),
+      feature_description: z.string().optional().describe('Optional feature description. If not provided, reads from input/feature.md automatically.'),
+      use_input_folder: z.boolean().optional().describe('Whether to read from input/feature.md. Defaults to true.'),
     },
   },
-  async ({ feature_description, use_input_folder }) => {
+  async ({ feature_description, use_input_folder = true }) => {
     try {
       console.error('MCP: run_qa_pipeline called');
 
-      //cleanup previous output
+      // Cleanup previous output
       cleanupOutput();
-      let finalInput = feature_description;
-      if (use_input_folder && fs.existsSync('input/feature.md')) {
+
+      // Default — always read input/feature.md unless explicitly disabled
+      let finalInput = feature_description ?? '';
+      if (use_input_folder !== false && fs.existsSync('input/feature.md')) {
         finalInput = fs.readFileSync('input/feature.md', 'utf8');
         console.error('MCP: Using input/feature.md');
+      } else if (!finalInput) {
+        throw new Error('No input found. Add content to input/feature.md or provide a feature_description.');
+      } else {
+        console.error('MCP: Using provided feature_description');
       }
 
       if (!fs.existsSync('output')) fs.mkdirSync('output');

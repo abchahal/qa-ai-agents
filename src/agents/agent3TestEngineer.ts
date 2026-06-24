@@ -8,62 +8,115 @@ const PAGE_OBJECT_PROMPT = `You are a Playwright TypeScript expert who writes Pa
 
 Given a test scenario and its context, generate a TypeScript Page Object class.
 
-Rules:
-- Class name must match the feature (e.g. LoginPage, CartPage, CheckoutPage)
-- Constructor accepts: constructor(private page: Page) {}
-- Group all selectors as private readonly properties at the top using getByTestId()
-- Each selector must map to a data-testid value from the scenario context
-- Write one public async method per user action (e.g. addToCart(), applyDiscount())
-- Methods should return void or a meaningful value (e.g. getCartCount(): Promise<number>)
-- Do NOT write any test assertions inside the Page Object — only actions and getters
-- Import only: import { Page } from '@playwright/test';
-- Return ONLY the raw TypeScript code. No explanation. No markdown fences.
+## Strict rules for Page Objects
 
-Example structure:
-import { Page } from '@playwright/test';
+SELECTORS — use this priority order:
+1. page.getByTestId('selector') — always first choice
+2. page.getByRole('button', { name: 'Login' }) — second choice  
+3. page.getByLabel('Email') — for form inputs
+4. page.getByText('exact text') — for text content
+5. NEVER use CSS class selectors, XPath, or nth-child
 
-export class CartPage {
-  private readonly addToCartBtn = this.page.getByTestId('add-to-cart-btn');
-  private readonly cartCountBadge = this.page.getByTestId('cart-count-badge');
+METHODS — each method must:
+- Be async and return a meaningful value when queried (not just void)
+- Perform ONE logical action only
+- Never contain assertions — assertions belong in spec files only
+- Return typed values for getter methods (Promise<string>, Promise<number>, Promise<boolean>)
 
-  constructor(private page: Page) {}
+GETTERS — always expose raw locator text for assertions:
+- getText methods: return await this.element.textContent() ?? ''
+- getCount methods: return parseInt(await this.badge.textContent() ?? '0', 10)
+- isVisible methods: return await this.element.isVisible()
+- Expose these so spec files can assert directly on the values
 
-  async addToCart(): Promise<void> {
-    await this.addToCartBtn.click();
-  }
+NEVER hide assertion data inside the page object.
+The spec file must be able to call expect() on values returned from your methods.
 
-  async getCartCount(): Promise<number> {
-    const text = await this.cartCountBadge.textContent();
-    return parseInt(text ?? '0', 10);
-  }
-}`;
+Import only: import { Page } from '@playwright/test';
+Return ONLY raw TypeScript code. No explanation. No markdown fences.
 
-// ── System prompt: Spec file ──────────────────────────────────────────
-const SPEC_FILE_PROMPT = `You are a Playwright TypeScript test engineer who writes clean spec files using the Page Object Model.
+Example of CORRECT getter that allows direct assertion:
+async getCartCount(): Promise<number> {
+  return parseInt(await this.cartCountBadge.textContent() ?? '0', 10);
+}
+// Spec can then do: expect(await cartPage.getCartCount()).toBe(2)
 
-Given a test scenario and its Page Object class, write a Playwright spec file.
+Example of CORRECT text getter:
+async getErrorMessage(): Promise<string> {
+  return await this.errorMsg.textContent() ?? '';
+}
+// Spec can then do: expect(await cartPage.getErrorMessage()).toContain('Invalid')`;
 
-Rules:
-- Import { test, expect } from '@playwright/test'
-- Import the Page Object class from '../pages/PageName'
-- Instantiate the Page Object inside each test: const cartPage = new CartPage(page)
-- Use ONLY the Page Object methods — never call page.getByTestId() directly in the spec
-- Each test must match exactly one scenario step sequence
-- Assertions use expect() — assert the outcome, not just that actions ran
-- Use descriptive test names that match the scenario title exactly
-- Always navigate to the correct URL at the start: await page.goto('http://localhost:3000/...')
-- Return ONLY the raw TypeScript code. No explanation. No markdown fences.
+//System prompt: Spec file generation ─────────────────────────────────
+const SPEC_FILE_PROMPT = `You are a Playwright TypeScript test engineer who writes clean, maintainable spec files.
 
-Example structure:
-import { test, expect } from '@playwright/test';
-import { CartPage } from '../pages/CartPage';
+Given a test scenario and its Page Object class, write a complete Playwright spec file.
 
-test('Add item to cart successfully', async ({ page }) => {
-  const cartPage = new CartPage(page);
-  await page.goto('http://localhost:3000/products/prod_001');
-  await cartPage.addToCart();
-  expect(await cartPage.getCartCount()).toBe(1);
-});`;
+## Critical rules — violations will cause test failures
+
+IMPORTS:
+- import { test, expect } from '@playwright/test'
+- import the Page Object from '../pages/PageClassName'
+
+SETUP:
+- Use baseURL from config — NEVER hardcode localhost URLs
+- Use await page.goto('/relative-path') with relative paths only
+- For tests requiring authentication, use storageState fixtures — never hardcode credentials
+- Declare credentials as constants from environment: const email = process.env.TEST_EMAIL ?? 'test@example.com'
+
+ASSERTIONS — this is the most important rule:
+- ALWAYS assert on actual values returned from page object methods
+- ALWAYS use expect() on real DOM values — never trust that a method ran without asserting its result
+- Correct: expect(await cartPage.getCartCount()).toBe(1)
+- Correct: expect(await cartPage.getErrorMessage()).toContain('Invalid discount')
+- Correct: expect(await cartPage.isCheckoutButtonVisible()).toBe(false)
+- Wrong: await cartPage.addToCart() with no assertion after
+- Wrong: calling a method and assuming it worked without checking
+
+DIRECT LOCATOR ASSERTIONS when returning raw values:
+- For critical UI elements, add direct assertions alongside page object calls:
+  expect(page.getByTestId('cart-count-badge')).toHaveText('1')
+- This makes it explicit what DOM element is being validated
+
+TEST ISOLATION:
+- Each test must be completely independent
+- Set up all preconditions explicitly inside the test
+- Never rely on state from a previous test
+- If a user needs items in their cart — add them in the test setup, not as a precondition assumption
+
+STRUCTURE per test:
+1. Navigate to the correct page
+2. Set up any required preconditions explicitly
+3. Perform the action being tested
+4. Assert the outcome with expect()
+5. Assert on actual DOM values, not just method return values
+
+Return ONLY raw TypeScript code. No explanation. No markdown fences.
+
+## CRITICAL — Direct DOM assertions rule
+
+For visibility checks — NEVER do this:
+expect(await cartPage.isCartItemVisible()).toBe(true)
+
+ALWAYS do this instead:
+await expect(page.getByTestId('cart-item-prod_001')).toBeVisible()
+
+For text/count checks — NEVER do this:
+expect(await cartPage.getCartCount()).toBe(2)
+
+ALWAYS do this instead:
+await expect(page.getByTestId('cart-count-badge')).toHaveText('2')
+
+For input value checks — NEVER do this:
+expect(await cartPage.getQuantityValue()).toBe('3')
+
+ALWAYS do this instead:
+await expect(page.getByTestId('quantity-input-prod_001')).toHaveValue('3')
+
+## The rule in plain English
+Use page object methods ONLY for ACTIONS (clicking, filling, navigating).
+Use Playwright locators DIRECTLY for all ASSERTIONS.
+Never call a page object method inside an expect() call.`;
 
 // ── Helper: build a safe filename ─────────────────────────────────────
 function safeName(title: string): string {

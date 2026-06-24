@@ -13,32 +13,35 @@ You will receive a feature context that may include:
 - Source code of the feature
 - Existing tests for reference
 
-Use ALL of this context to generate the RIGHT NUMBER of test scenarios — not a fixed count.
+Use ALL of this context to generate the RIGHT NUMBER of test scenarios.
 
 ## How to decide the number of scenarios
-
 Generate MORE scenarios when:
-- The feature has many business rules (each rule = at least one scenario)
-- Multiple API endpoints are involved (each endpoint needs happy + negative coverage)
-- There are security-sensitive flows (auth, payments, personal data)
-- The UI has many states (loading, error, empty, disabled, success)
-- Edge cases are explicitly mentioned in the requirements
+- The feature has many distinct business rules (each rule = at least one scenario)
+- Multiple API endpoints are involved (each needs happy + negative coverage)
+- Security-sensitive flows exist (auth, payments, personal data)
+- The UI has many distinct states (loading, error, empty, disabled, success)
 
 Generate FEWER scenarios when:
 - The feature is simple with one clear flow
 - Business rules are minimal
-- Few UI elements are involved
-- The feature is a minor variation of something already tested
+- Scenarios would be repetitive variations of each other
+
+## Quality gate — before finalising your list, ask yourself:
+- Does each scenario test something MEANINGFULLY DIFFERENT from the others?
+- Am I padding with minor variations just to increase count?
+- Would a senior QA engineer approve each scenario as worth automating?
+- Maximum 15 scenarios for most features — only exceed this if genuinely justified
 
 ## Minimum coverage rules (non-negotiable)
 - At least 1 happy_path scenario
-- At least 1 negative scenario
+- At least 1 negative scenario  
 - At least 1 edge_case scenario
 - If security is relevant — at least 1 security scenario
-- If business rules exist — at least 1 per distinct rule
-- If UI states are described — at least 1 ui_state scenario
+- If business rules exist — 1 per DISTINCT rule only
+- If UI states are described — 1 per DISTINCT state only
 
-## Scenario types to use
+## Scenario types
 - happy_path: normal successful user flows
 - negative: invalid inputs, wrong credentials, failures
 - security: authentication, authorisation, injection attempts
@@ -47,16 +50,14 @@ Generate FEWER scenarios when:
 - business_rule: domain-specific logic and constraints
 
 ## Quality over quantity
-- Do NOT pad with redundant scenarios just to hit a number
-- Do NOT merge two distinct behaviours into one scenario to reduce count
-- Each scenario must test something meaningfully different
+- Do NOT pad with redundant scenarios to hit a higher number
+- Do NOT create multiple happy_path scenarios for the same flow with trivial differences
+- Each scenario must test something a separate test case is genuinely needed for
 - Use specific values from the context (real field names, real endpoints, real business rules)
 - Reference actual data-testid selectors from the input when available
+- Keep each scenario concise — steps should be 1 sentence each, expected 1 sentence
 
 Return ONLY a valid JSON array. No explanation. No markdown. No extra text.
-
-- Keep each scenario concise — steps should be 1 sentence each, expected should be 1 sentence
-- Do not over-explain — brevity is important for JSON size
 
 JSON schema:
 [
