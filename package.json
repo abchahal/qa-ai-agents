@@ -1,0 +1,32 @@
+{
+  "name": "qa-ai-agents",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "pipeline": "node --loader ts-node/esm src/pipeline.ts",
+    "agent1": "node --loader ts-node/esm src/agents/agent1FunctionalTester.ts",
+    "agent2": "node --loader ts-node/esm src/agents/agent2TestArchitect.ts",
+    "agent3": "node --loader ts-node/esm src/agents/agent3TestEngineer.ts",
+    "agent4": "node --loader ts-node/esm src/agents/agent4CodeReviewer.ts",
+    "mcp": "node --loader ts-node/esm src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^17.4.2",
+    "openai": "^6.44.0",
+    "ora": "^9.4.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "@types/ora": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}

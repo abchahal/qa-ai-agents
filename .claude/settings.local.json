@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__qa-ai-agents__run_qa_pipeline"
+    ]
+  }
+}
