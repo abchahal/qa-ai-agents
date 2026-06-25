@@ -104,8 +104,8 @@ async function runPipeline(featureInput: string): Promise<PipelineResult> {
     // Then clean
     cleanupOutput();
   }
-  //clean previous output files before running the pipeline
-  cleanupOutput();
+  // Call once — archives previous run then cleans
+  archiveAndClean();
 
   console.log("Loading input files...");
   const inputContext = loadInput();
@@ -125,51 +125,52 @@ async function runPipeline(featureInput: string): Promise<PipelineResult> {
 
   // ── Agent 2: Assign to test pyramid layers ────────────────────────
   // ── Agent 2: Assign to test pyramid layers ────────────────────────
-const layerSpinner = ora("Agent 2 — Assigning test layers...").start();
-const layerPlan = await runTestArchitect(scenarios);
-layerSpinner.succeed(
-  `Agent 2 — Assigned ${layerPlan.length} scenarios to layers`,
-);
+  const layerSpinner = ora("Agent 2 — Assigning test layers...").start();
+  const layerPlan = await runTestArchitect(scenarios);
+  layerSpinner.succeed(
+    `Agent 2 — Assigned ${layerPlan.length} scenarios to layers`,
+  );
 
-// ── Enrich layerPlan with scenario data + validate pageName ──────
-const enrichedLayerPlan = layerPlan.map((lp: LayerPlan) => {
-  // 1. Attach scenario data from Agent 1
-  const scenario = scenarios.find((s: Scenario) => s.id === lp.scenarioId);
+  // ── Enrich layerPlan with scenario data + validate pageName ──────
+  const enrichedLayerPlan = layerPlan.map((lp: LayerPlan) => {
+    // 1. Attach scenario data from Agent 1
+    const scenario = scenarios.find((s: Scenario) => s.id === lp.scenarioId);
 
-  // 2. Repair missing pageName dynamically from scenario title
-  let pageName = lp.pageName;
-  if (!pageName || pageName.trim() === '' || pageName === 'undefined') {
-    if (scenario) {
-      // Derive from scenario title — works for any domain, no hardcoding
-      pageName = scenario.title
-        .split(' ')
-        .filter((w) => w.length > 3)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .slice(0, 2)
-        .join('') + 'Page';
-    } else {
-      pageName = `${lp.scenarioId}Page`;
+    // 2. Repair missing pageName dynamically from scenario title
+    let pageName = lp.pageName;
+    if (!pageName || pageName.trim() === "" || pageName === "undefined") {
+      if (scenario) {
+        // Derive from scenario title — works for any domain, no hardcoding
+        pageName =
+          scenario.title
+            .split(" ")
+            .filter((w) => w.length > 3)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .slice(0, 2)
+            .join("") + "Page";
+      } else {
+        pageName = `${lp.scenarioId}Page`;
+      }
+      console.warn(
+        `  ⚠ pageName missing for ${lp.scenarioId} — derived: ${pageName}`,
+      );
     }
-    console.warn(
-      `  ⚠ pageName missing for ${lp.scenarioId} — derived: ${pageName}`,
-    );
-  }
 
-  return { ...lp, scenario, pageName };
-});
+    return { ...lp, scenario, pageName };
+  });
 
-// Warn if any scenario could not be matched
-enrichedLayerPlan.forEach((lp) => {
-  if (!lp.scenario) {
-    console.warn(
-      `  ⚠ No scenario found for ${lp.scenarioId} — check Agent 1/2 ID mismatch`,
-    );
-  }
-});
+  // Warn if any scenario could not be matched
+  enrichedLayerPlan.forEach((lp) => {
+    if (!lp.scenario) {
+      console.warn(
+        `  ⚠ No scenario found for ${lp.scenarioId} — check Agent 1/2 ID mismatch`,
+      );
+    }
+  });
 
   // ── Agent 3: Write Playwright test files ──────────────────────────
   const testSpinner = ora("Agent 3 — Writing test files...").start();
-  const testResults: TestResult[] = await runTestEngineer(layerPlan);
+  const testResults: TestResult[] = await runTestEngineer(enrichedLayerPlan);
   testSpinner.succeed(`Agent 3 — Generated ${testResults.length} test files`);
 
   // ── Agent 4: Review generated test quality ────────────────────────
