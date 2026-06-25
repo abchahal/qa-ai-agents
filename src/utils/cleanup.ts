@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 export function cleanupOutput(): void {
-  console.log('\nCleaning up previous output...');
+  console.error('\nCleaning up previous output...');
 
   const foldersToClean = [
     path.join('output', 'tests'),
@@ -17,7 +17,7 @@ export function cleanupOutput(): void {
   for (const folder of foldersToClean) {
     if (fs.existsSync(folder)) {
       fs.rmSync(folder, { recursive: true, force: true });
-      console.log(`  ✓ Cleared: ${folder}`);
+      console.error(`  ✓ Cleared: ${folder}`);
     }
     fs.mkdirSync(folder, { recursive: true });
   }
@@ -26,7 +26,7 @@ export function cleanupOutput(): void {
   for (const file of filesToClean) {
     if (fs.existsSync(file)) {
       fs.rmSync(file);
-      console.log(`  ✓ Deleted: ${file}`);
+      console.error(`  ✓ Deleted: ${file}`);
     }
   }
 
@@ -35,5 +35,5 @@ export function cleanupOutput(): void {
     fs.mkdirSync('output');
   }
 
-  console.log('  ✓ Cleanup complete — ready for fresh run\n');
+  console.error('  ✓ Cleanup complete — ready for fresh run\n');
 }

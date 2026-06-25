@@ -1,4 +1,11 @@
 {
+  "autoApprove": [
+    "mcp__qa-ai-agents__run_qa_pipeline",
+    "mcp__qa-ai-agents__generate_test_scenarios",
+    "mcp__qa-ai-agents__set_feature_input",
+    "mcp__qa-ai-agents__get_pipeline_report",
+    "Bash"
+  ],
   "permissions": {
     "allow": [
       "mcp__qa-ai-agents__run_qa_pipeline"

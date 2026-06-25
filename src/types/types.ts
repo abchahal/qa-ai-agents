@@ -10,7 +10,10 @@ export interface LayerPlan {
   scenarioId: string;
   layer: 'unit' | 'api' | 'component' | 'e2e';
   reason: string;
-  scenario: Scenario;
+  scenario?: Scenario;
+  automationPriority: "P1" | "P2" | "P3";
+  manualOnly: boolean;
+  pageName: string;
 }
 
 export interface TestResult {

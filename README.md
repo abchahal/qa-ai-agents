@@ -7,8 +7,8 @@ An AI-powered QA automation pipeline built with TypeScript, Claude API, and the 
 Four specialised agents run in sequence, each grounded in feature requirements, business rules, and API contracts:
 
 1. **Agent 1 — Functional Tester**: Generates test scenarios across happy path, negative, security, edge cases, UI states, and business rules
-2. **Agent 2 — Test Architect**: Assigns each scenario to the correct test pyramid layer (unit / API / component / E2E)
-3. **Agent 3 — Test Engineer**: Writes production-grade Playwright tests using Page Object Model (POM)
+2. **Agent 2 — Test Architect**: Assigns each scenario to the correct test pyramid layer (unit / API / component / E2E), sets automation priority (P1/P2/P3), and flags manual-only scenarios
+3. **Agent 3 — Test Engineer**: Writes production-grade Playwright tests for unit, API, and component layers using Page Object Model (POM). E2E tests are excluded — these are handled at SIT/UAT level
 4. **Agent 4 — Code Reviewer**: Audits generated tests for selector quality, assertion completeness, and Playwright best practices
 
 ## MCP Server
@@ -68,8 +68,11 @@ npm run pipeline
 
 ```
 output/
-├── pages/             ← Page Object classes
-├── tests/             ← Playwright spec files
+├── pages/             ← Page Object classes (one per page, shared across scenarios)
+├── tests/
+│   ├── unit/          ← Unit test spec files
+│   ├── api/           ← API test spec files
+│   └── component/     ← Component test spec files
 └── pipeline_report.md
 ```
 
@@ -81,7 +84,7 @@ output/
 |---|---|---|
 | Agent 1 | Haiku 4.5 | Structured JSON output |
 | Agent 2 | Haiku 4.5 | Classification task |
-| Agent 3 | Haiku 4.5 | Code generation |
+| Agent 3 | Sonnet 4.6 | Code generation — requires higher quality output |
 | Agent 4 | Haiku 4.5 | Analysis and scoring |
 
 ---

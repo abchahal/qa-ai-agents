@@ -76,11 +76,11 @@ JSON schema:
 }`;
 
 export async function runCodeReviewer(testResults: TestResult[]): Promise<ReviewReport> {
-  console.log('Agent 4: Reviewing test quality...');
+  console.error('Agent 4: Reviewing test quality...');
   const input = testResults.map(r => `// FILE: ${r.file}\n${r.code}`).join('\n\n---\n\n');
   const raw = await callClaude(SYSTEM_PROMPT, input);
   const report = parseJSON<ReviewReport>(raw);
-  console.log(`Agent 4: Review complete. Score: ${report.overallScore}/100`);
+  console.error(`Agent 4: Review complete. Score: ${report.overallScore}/100`);
   return report;
 }
 
@@ -106,6 +106,6 @@ test('Successful login', async ({ page }) => {
     },
   ];
   runCodeReviewer(sampleResults)
-    .then(result => console.log(JSON.stringify(result, null, 2)))
+    .then(result => console.error(JSON.stringify(result, null, 2)))
     .catch(console.error);
 }

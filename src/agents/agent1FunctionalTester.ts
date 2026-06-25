@@ -100,14 +100,14 @@ function loadInputContext(): string {
 
 // ── Main agent function ───────────────────────────────────────────────
 export async function runFunctionalTester(featureDescription: string): Promise<Scenario[]> {
-  console.log('\n--- Agent 1: Functional Tester ---');
+  console.error('\n--- Agent 1: Functional Tester ---');
 
   // If called from pipeline, featureDescription already has full context.
   // If run standalone, try loading from input/ folder, fall back to the argument.
   const inputContext = process.argv[2] ? '' : loadInputContext();
   const finalInput = inputContext || featureDescription;
 
-  console.log(`Input: ${finalInput.length > 80
+  console.error(`Input: ${finalInput.length > 80
     ? finalInput.slice(0, 80).replace(/\n/g, ' ') + '...'
     : finalInput
   }`);
@@ -115,8 +115,8 @@ export async function runFunctionalTester(featureDescription: string): Promise<S
   const raw = await callClaude(SYSTEM_PROMPT, finalInput);
   const scenarios = parseJSON<Scenario[]>(raw);
 
-  console.log(`✓ Generated ${scenarios.length} scenarios:`);
-  scenarios.forEach((s: Scenario) => console.log(`  [${s.type}] ${s.title}`));
+  console.error(`✓ Generated ${scenarios.length} scenarios:`);
+  scenarios.forEach((s: Scenario) => console.error(`  [${s.type}] ${s.title}`));
 
   return scenarios;
 }
@@ -130,9 +130,9 @@ if (isMain) {
 
   runFunctionalTester(cliFeature)
     .then((result: Scenario[]) => {
-      console.log('\n--- Full Output ---');
-      console.log(JSON.stringify(result, null, 2));
-      console.log(`\nTotal scenarios: ${result.length}`);
+      console.error('\n--- Full Output ---');
+      console.error(JSON.stringify(result, null, 2));
+      console.error(`\nTotal scenarios: ${result.length}`);
     })
     .catch((err: Error) => {
       console.error('Agent 1 failed:', err.message);

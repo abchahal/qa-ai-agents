@@ -24,7 +24,7 @@ export const MODEL = {
 
 export type ModelTier = typeof MODEL[keyof typeof MODEL];
 
-console.log(`Using ${USE_OLLAMA ? `Ollama: ${OLLAMA_MODEL}` : 'Claude API'}`);
+console.error(`Using ${USE_OLLAMA ? `Ollama: ${OLLAMA_MODEL}` : 'Claude API'}`);
 
 // ── Main call function ────────────────────────────────────────────────
 export async function callClaude(
@@ -43,10 +43,11 @@ export async function callClaude(
     });
     return response.choices[0].message.content ?? '';
   } else {
-    console.log(`  → Model: ${model === MODEL.FAST ? 'Haiku 4.5' : 'Sonnet 4.6'}`);
+    console.error(`  → Model: ${model === MODEL.FAST ? 'Haiku 4.5' : 'Sonnet 4.6'}`);
     const response = await anthropic!.messages.create({
       model,
-      max_tokens: 8192,               // ← increased from 4096
+      max_tokens: 8192,  
+      temperature: 0,             
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     });
